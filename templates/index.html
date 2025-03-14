@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruta Óptima</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
+    <style>
+        #map { height: 500px; }
+        .container { display: flex; }
+        .form-container { flex: 1; padding: 20px; }
+        .map-container { flex: 2; padding: 20px; }
+        .info-container { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Formulario para agregar paradas -->
+        <div class="form-container">
+            <h1>Agregar Parada</h1>
+            <form id="form-parada">
+                <label for="nombre">Nombre:</label>
+                <input type="text" id="nombre" name="nombre" required>
+                <br>
+                <label for="direccion">Dirección:</label>
+                <input type="text" id="direccion" name="direccion" required>
+                <br>
+                <button type="submit">Agregar Parada</button>
+            </form>
+
+            <h2>Paradas Actuales</h2>
+            <ul id="lista-paradas"></ul>
+
+            <button id="calcular-ruta">Calcular Ruta Óptima</button>
+
+            <div class="info-container">
+                <h2>Información de la Ruta</h2>
+                <p id="tiempo-total"></p>
+                <p id="distancia-total"></p>
+                <p id="tiempo-proxima-parada"></p>
+            </div>
+        </div>
+
+        <!-- Mapa -->
+        <div class="map-container">
+            <h1>Mapa de Ruta</h1>
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
