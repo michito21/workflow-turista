@@ -4,6 +4,11 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
 }).addTo(map);
 
+// Ajustar el tamaño del mapa al cambiar el tamaño de la ventana
+window.addEventListener('resize', () => {
+    map.invalidateSize();
+});
+
 // Variable para almacenar el marcador de la ubicación actual
 let ubicacionActualMarker = null;
 let ubicacionActualCoords = null;

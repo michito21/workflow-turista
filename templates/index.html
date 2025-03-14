@@ -9,11 +9,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-    <div class="container mt-4">
+    <div class="container-fluid mt-3">
         <h1 class="text-center">Ruta Óptima</h1>
         <div class="row">
             <!-- Formulario para agregar paradas -->
-            <div class="col-md-4">
+            <div class="col-md-4 col-12">
                 <h2>Agregar Parada</h2>
                 <form id="form-parada" class="mb-4">
                     <div class="mb-3">
@@ -37,43 +37,45 @@
                         <input type="text" id="direccion" name="direccion" class="form-control" required>
                         <div id="sugerencias" class="sugerencias"></div>
                     </div>
-                    <button type="submit" class="btn btn-primary">Agregar Parada</button>
+                    <button type="submit" class="btn btn-primary w-100">Agregar Parada</button>
                 </form>
 
                 <h2>Paradas Actuales</h2>
                 <ul id="lista-paradas" class="list-group mb-4"></ul>
 
-                <button id="calcular-ruta" class="btn btn-success">Calcular Ruta Óptima</button>
+                <button id="calcular-ruta" class="btn btn-success w-100">Calcular Ruta Óptima</button>
             </div>
 
             <!-- Mapa y orden de paradas -->
-            <div class="col-md-8">
+            <div class="col-md-8 col-12">
                 <h2>Mapa de Ruta</h2>
-                <div id="map" style="height: 500px;"></div>
+                <div id="map" style="height: 400px;"></div>
 
-                <h2>Información de la Ruta</h2>
-                <div id="info-ruta">
+                <h2 class="mt-3">Información de la Ruta</h2>
+                <div id="info-ruta" class="mb-3">
                     <p><strong>Tiempo total:</strong> <span id="tiempo-total"></span></p>
                     <p><strong>Distancia total:</strong> <span id="distancia-total"></span></p>
                     <p><strong>Próxima parada:</strong> <span id="siguiente-parada"></span></p>
                 </div>
 
                 <h2>Orden de Paradas</h2>
-                <table id="orden-paradas" class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Apellidos</th>
-                            <th>Correo</th>
-                            <th>Teléfono</th>
-                            <th>Dirección</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Las filas se llenarán dinámicamente -->
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table id="orden-paradas" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Apellidos</th>
+                                <th>Correo</th>
+                                <th>Teléfono</th>
+                                <th>Dirección</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Las filas se llenarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
