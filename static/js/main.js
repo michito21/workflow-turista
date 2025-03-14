@@ -35,24 +35,28 @@ function cargarParadas() {
             listaParadas.innerHTML = '';
             paradas.forEach(parada => {
                 const li = document.createElement('li');
-                li.textContent = `${parada[0]} (${parada[1]}, ${parada[2]})`;
+                li.className = 'list-group-item';
+                li.textContent = `${parada[0]} ${parada[1]} - ${parada[4]}`;
                 listaParadas.appendChild(li);
-            });
-
-            // Eliminar solo los marcadores de las paradas (no el de la ubicación actual)
-            map.eachLayer(layer => {
-                if (layer instanceof L.Marker && layer !== ubicacionActualMarker) {
-                    map.removeLayer(layer);
-                }
-            });
-
-            // Dibujar las paradas en el mapa
-            paradas.forEach(parada => {
-                L.marker([parada[1], parada[2]]).addTo(map)
-                    .bindPopup(parada[0]);
             });
         });
 }
+
+// Agregar una nueva parada
+document.getElementById('form-parada').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    fetch('/agregar_parada', {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            cargarParadas();
+        }
+    });
+});
 
 // Calcular la ruta óptima
 document.getElementById('calcular-ruta').addEventListener('click', () => {
@@ -74,16 +78,33 @@ document.getElementById('calcular-ruta').addEventListener('click', () => {
                 // Mostrar el tiempo total y la distancia
                 const tiempoTotal = (data.duracion_total / 60).toFixed(2); // Convertir a minutos
                 const distanciaTotal = (data.distancia_total / 1000).toFixed(2); // Convertir a kilómetros
-                document.getElementById('tiempo-total').textContent = `Tiempo total: ${tiempoTotal} minutos`;
-                document.getElementById('distancia-total').textContent = `Distancia total: ${distanciaTotal} km`;
+                document.getElementById('tiempo-total').textContent = `${tiempoTotal} minutos`;
+                document.getElementById('distancia-total').textContent = `${distanciaTotal} km`;
 
-                // Mostrar el tiempo hasta la próxima parada
-                if (data.tiempos_entre_paradas && data.tiempos_entre_paradas.length > 0) {
-                    const tiempoProximaParada = (data.tiempos_entre_paradas[0] / 60).toFixed(2); // Convertir a minutos
-                    document.getElementById('tiempo-proxima-parada').textContent = `Tiempo hasta la próxima parada: ${tiempoProximaParada} minutos`;
-                } else {
-                    document.getElementById('tiempo-proxima-parada').textContent = "No hay tiempos disponibles para las paradas.";
-                }
+                // Mostrar el tiempo entre paradas
+                const tiemposEntreParadas = data.tiempos_entre_paradas.map(t => (t / 60).toFixed(2)).join(' min, ');
+                document.getElementById('tiempos-entre-paradas').textContent = `${tiemposEntreParadas} min`;
+
+                // Mostrar el orden de las paradas
+                const ordenParadas = document.getElementById('orden-paradas').getElementsByTagName('tbody')[0];
+                ordenParadas.innerHTML = '';
+                data.orden_paradas.forEach((parada, index) => {
+                    const fila = document.createElement('tr');
+                    fila.innerHTML = `
+                        <td>${parada[0]}</td>
+                        <td>${parada[1]}</td>
+                        <td>${parada[2]}</td>
+                        <td>${parada[3]}</td>
+                        <td>${parada[4]}</td>
+                    `;
+                    ordenParadas.appendChild(fila);
+                });
+
+                // Añadir marcadores de las paradas en el mapa
+                data.orden_paradas.forEach((parada, index) => {
+                    L.marker([parada[5], parada[6]]).addTo(map)
+                        .bindPopup(`Parada ${index + 1}: ${parada[0]} ${parada[1]}`);
+                });
             } else {
                 alert("Error al calcular la ruta");
             }

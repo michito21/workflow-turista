@@ -6,6 +6,9 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS paradas
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   nombre TEXT,
+                  apellidos TEXT,
+                  correo TEXT,
+                  telefono TEXT,
                   direccion TEXT,
                   latitud REAL,
                   longitud REAL)''')
