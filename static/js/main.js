@@ -81,9 +81,15 @@ document.getElementById('calcular-ruta').addEventListener('click', () => {
                 document.getElementById('tiempo-total').textContent = `${tiempoTotal} minutos`;
                 document.getElementById('distancia-total').textContent = `${distanciaTotal} km`;
 
-                // Mostrar el tiempo entre paradas
-                const tiemposEntreParadas = data.tiempos_entre_paradas.map(t => (t / 60).toFixed(2)).join(' min, ');
-                document.getElementById('tiempos-entre-paradas').textContent = `${tiemposEntreParadas} min`;
+                // Mostrar el tiempo y la distancia hasta la siguiente parada
+                const siguienteParada = data.siguiente_parada;
+                const tiempoSiguienteParada = (siguienteParada.duracion / 60).toFixed(2); // Convertir a minutos
+                const distanciaSiguienteParada = (siguienteParada.distancia / 1000).toFixed(2); // Convertir a kilómetros
+                document.getElementById('siguiente-parada').innerHTML = `
+                    <p><strong>Próxima parada:</strong> ${siguienteParada.nombre} ${siguienteParada.apellidos}</p>
+                    <p><strong>Distancia:</strong> ${distanciaSiguienteParada} km</p>
+                    <p><strong>Tiempo estimado:</strong> ${tiempoSiguienteParada} minutos</p>
+                `;
 
                 // Mostrar el orden de las paradas
                 const ordenParadas = document.getElementById('orden-paradas').getElementsByTagName('tbody')[0];
@@ -96,6 +102,10 @@ document.getElementById('calcular-ruta').addEventListener('click', () => {
                         <td>${parada[2]}</td>
                         <td>${parada[3]}</td>
                         <td>${parada[4]}</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="eliminarParada(${parada[5]})">Eliminar</button>
+                            <button class="btn btn-warning btn-sm" onclick="editarParada(${parada[5]})">Editar</button>
+                        </td>
                     `;
                     ordenParadas.appendChild(fila);
                 });
@@ -113,3 +123,25 @@ document.getElementById('calcular-ruta').addEventListener('click', () => {
 
 // Cargar las paradas al iniciar
 cargarParadas();
+
+//##################################################################################
+// Eliminar una parada
+function eliminarParada(id) {
+    if (confirm("¿Estás seguro de que deseas eliminar esta parada?")) {
+        fetch(`/eliminar_parada/${id}`, {
+            method: 'DELETE',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                cargarParadas();
+            }
+        });
+    }
+}
+
+// Editar una parada
+function editarParada(id) {
+    // Aquí puedes implementar la lógica para editar una parada
+    alert(`Editar parada con ID: ${id}`);
+}

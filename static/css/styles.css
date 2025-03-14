@@ -1,0 +1,15 @@
+.sugerencias {
+    border: 1px solid #ccc;
+    max-height: 150px;
+    overflow-y: auto;
+    margin-top: 5px;
+}
+
+.sugerencia {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.sugerencia:hover {
+    background-color: #f0f0f0;
+}

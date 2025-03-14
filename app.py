@@ -37,7 +37,9 @@ def agregar_parada():
     
     return jsonify({"status": "success", "latitud": latitud, "longitud": longitud})
 
+
 @app.route('/obtener_paradas')
+
 def obtener_paradas():
     conn = sqlite3.connect('paradas.db')
     c = conn.cursor()
@@ -73,15 +75,22 @@ def calcular_ruta_optima():
         response = requests.get(url)
         if response.status_code == 200:
             data = response.json()
-            return data['routes'][0]['distance']  # Distancia en metros
+            return {
+                "distancia": data['routes'][0]['distance'],  # Distancia en metros
+                "duracion": data['routes'][0]['duration']   # Duración en segundos
+            }
         else:
-            return float('inf')  # Si hay un error, devolvemos infinito
+            return {"distancia": float('inf'), "duracion": float('inf')}
 
     # Ordenar las paradas por distancia desde la ubicación actual
     paradas_ordenadas = sorted(
         paradas,
-        key=lambda parada: calcular_distancia((lat_actual, lon_actual), (parada[5], parada[6]))
+        key=lambda parada: calcular_distancia((lat_actual, lon_actual), (parada[5], parada[6]))["distancia"]
     )
+
+    # Obtener la siguiente parada (la más cercana)
+    siguiente_parada = paradas_ordenadas[0]
+    distancia_siguiente_parada = calcular_distancia((lat_actual, lon_actual), (siguiente_parada[5], siguiente_parada[6]))
 
     # Crear una lista de coordenadas para la ruta (ubicación actual + paradas ordenadas)
     puntos = [(lat_actual, lon_actual)] + [(parada[5], parada[6]) for parada in paradas_ordenadas]
@@ -97,12 +106,6 @@ def calcular_ruta_optima():
         duracion_total = data['routes'][0]['duration']  # Duración total en segundos
         distancia_total = data['routes'][0]['distance']  # Distancia total en metros
 
-        # Extraer los tiempos entre paradas (duración de cada "leg")
-        tiempos_entre_paradas = []
-        if 'legs' in data['routes'][0]:
-            for leg in data['routes'][0]['legs']:
-                tiempos_entre_paradas.append(leg['duration'])  # Duración de cada tramo en segundos
-
         # Convertir coordenadas a formato [lat, lon]
         ruta = [[coord[1], coord[0]] for coord in ruta]
 
@@ -111,7 +114,15 @@ def calcular_ruta_optima():
             "ruta": ruta,
             "duracion_total": duracion_total,
             "distancia_total": distancia_total,
-            "tiempos_entre_paradas": tiempos_entre_paradas,
+            "siguiente_parada": {
+                "nombre": siguiente_parada[0],
+                "apellidos": siguiente_parada[1],
+                "correo": siguiente_parada[2],
+                "telefono": siguiente_parada[3],
+                "direccion": siguiente_parada[4],
+                "distancia": distancia_siguiente_parada["distancia"],
+                "duracion": distancia_siguiente_parada["duracion"]
+            },
             "orden_paradas": paradas_ordenadas  # Incluir detalles de las paradas
         })
     else:
@@ -125,6 +136,16 @@ def calcular_distancia(origen, destino):
         return data['routes'][0]['distance']  # Distancia en metros
     else:
         return float('inf')  # Si hay un error, devolvemos infinito
+
+@app.route('/eliminar_parada/<int:id>', methods=['DELETE'])
+def eliminar_parada(id):
+    conn = sqlite3.connect('paradas.db')
+    c = conn.cursor()
+    c.execute("DELETE FROM paradas WHERE id = ?", (id,))
+    conn.commit()
+    conn.close()
+    
+    return jsonify({"status": "success"})
 
 if __name__ == '__main__':
     app.run(debug=True)
