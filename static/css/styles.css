@@ -14,53 +14,30 @@
     background-color: #f0f0f0;
 }
 
-/* Estilos generales */
 body {
     font-family: Arial, sans-serif;
     padding: 10px;
 }
 
-/* Ajustes para el mapa */
 #map {
     width: 100%;
     height: 400px;
     margin-bottom: 20px;
 }
 
-/* Ajustes para el formulario */
 #form-parada .form-control {
     margin-bottom: 10px;
 }
 
-/* Ajustes para la lista de paradas */
 #lista-paradas {
     max-height: 200px;
     overflow-y: auto;
 }
 
-/* Ajustes para la tabla */
 .table-responsive {
     overflow-x: auto;
 }
 
-/* Ajustes para los botones */
 .btn {
     margin-bottom: 10px;
-}
-
-/* Ajustes para las sugerencias de direcciones */
-.sugerencias {
-    border: 1px solid #ccc;
-    max-height: 150px;
-    overflow-y: auto;
-    margin-top: 5px;
-}
-
-.sugerencia {
-    padding: 10px;
-    cursor: pointer;
-}
-
-.sugerencia:hover {
-    background-color: #f0f0f0;
 }

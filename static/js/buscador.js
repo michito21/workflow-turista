@@ -1,4 +1,3 @@
-// Buscador de direcciones
 function inicializarBuscador() {
     const inputDireccion = document.getElementById('direccion');
     const sugerencias = document.getElementById('sugerencias');
@@ -27,5 +26,4 @@ function inicializarBuscador() {
     });
 }
 
-// Inicializar el buscador al cargar la página
 document.addEventListener('DOMContentLoaded', inicializarBuscador);

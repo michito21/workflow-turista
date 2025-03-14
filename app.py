@@ -1,19 +1,19 @@
 from flask import Flask, render_template, request, jsonify
 import sqlite3
 from geopy.geocoders import Nominatim
-import folium
 import requests
-import networkx as nx
-from networkx.algorithms.approximation import christofides
 
 app = Flask(__name__)
-
-# Inicializar geocoder
 geolocator = Nominatim(user_agent="ruta_optima")
+
+def get_db_connection():
+    conn = sqlite3.connect('paradas.db')
+    conn.row_factory = sqlite3.Row
+    return conn
 
 def get_coordinates(direccion):
     location = geolocator.geocode(direccion)
-    return (location.latitude, location.longitude)
+    return (location.latitude, location.longitude) if location else (None, None)
 
 @app.route('/')
 def index():
@@ -21,130 +21,84 @@ def index():
 
 @app.route('/agregar_parada', methods=['POST'])
 def agregar_parada():
-    nombre = request.form['nombre']
-    apellidos = request.form['apellidos']
-    correo = request.form['correo']
-    telefono = request.form['telefono']
-    direccion = request.form['direccion']
-    latitud, longitud = get_coordinates(direccion)
-    
-    conn = sqlite3.connect('paradas.db')
-    c = conn.cursor()
-    c.execute("INSERT INTO paradas (nombre, apellidos, correo, telefono, direccion, latitud, longitud) VALUES (?, ?, ?, ?, ?, ?, ?)",
-              (nombre, apellidos, correo, telefono, direccion, latitud, longitud))
+    data = request.form
+    latitud, longitud = get_coordinates(data['direccion'])
+    if latitud is None or longitud is None:
+        return jsonify({"status": "error", "message": "Dirección no válida"}), 400
+
+    conn = get_db_connection()
+    conn.execute("INSERT INTO paradas (nombre, apellidos, correo, telefono, direccion, latitud, longitud) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                 (data['nombre'], data['apellidos'], data['correo'], data['telefono'], data['direccion'], latitud, longitud))
     conn.commit()
     conn.close()
-    
     return jsonify({"status": "success", "latitud": latitud, "longitud": longitud})
 
-
 @app.route('/obtener_paradas')
-
 def obtener_paradas():
-    conn = sqlite3.connect('paradas.db')
-    c = conn.cursor()
-    c.execute("SELECT nombre, apellidos, correo, telefono, direccion, latitud, longitud FROM paradas")
-    paradas = c.fetchall()
+    conn = get_db_connection()
+    paradas = conn.execute("SELECT * FROM paradas").fetchall()
     conn.close()
-    
-    return jsonify(paradas)
+    return jsonify([dict(parada) for parada in paradas])
 
 @app.route('/calcular_ruta_optima')
 def calcular_ruta_optima():
-    # Obtener la ubicación actual (simulada o desde el frontend)
     ubicacion_actual = request.args.get('ubicacion_actual')
     if not ubicacion_actual:
-        return jsonify({"status": "error", "message": "Ubicación actual no proporcionada"})
+        return jsonify({"status": "error", "message": "Ubicación actual no proporcionada"}), 400
 
     lat_actual, lon_actual = map(float, ubicacion_actual.split(','))
-
-    # Obtener las paradas desde la base de datos
-    conn = sqlite3.connect('paradas.db')
-    c = conn.cursor()
-    c.execute("SELECT nombre, apellidos, correo, telefono, direccion, latitud, longitud FROM paradas")
-    paradas = c.fetchall()
+    conn = get_db_connection()
+    paradas = conn.execute("SELECT * FROM paradas").fetchall()
     conn.close()
 
-    # Verificar que haya al menos una parada
-    if len(paradas) < 1:
-        return jsonify({"status": "error", "message": "Se necesita al menos una parada para calcular la ruta"})
+    if not paradas:
+        return jsonify({"status": "error", "message": "Se necesita al menos una parada para calcular la ruta"}), 400
 
-    # Calcular la distancia entre la ubicación actual y cada parada
     def calcular_distancia(origen, destino):
         url = f"http://router.project-osrm.org/route/v1/driving/{origen[1]},{origen[0]};{destino[1]},{destino[0]}?overview=false"
         response = requests.get(url)
         if response.status_code == 200:
             data = response.json()
-            return {
-                "distancia": data['routes'][0]['distance'],  # Distancia en metros
-                "duracion": data['routes'][0]['duration']   # Duración en segundos
-            }
-        else:
-            return {"distancia": float('inf'), "duracion": float('inf')}
+            return data['routes'][0]['distance'], data['routes'][0]['duration']
+        return float('inf'), float('inf')
 
-    # Ordenar las paradas por distancia desde la ubicación actual
-    paradas_ordenadas = sorted(
-        paradas,
-        key=lambda parada: calcular_distancia((lat_actual, lon_actual), (parada[5], parada[6]))["distancia"]
-    )
+    paradas_ordenadas = sorted(paradas, key=lambda parada: calcular_distancia((lat_actual, lon_actual), (parada['latitud'], parada['longitud']))[0])
 
-    # Obtener la siguiente parada (la más cercana)
     siguiente_parada = paradas_ordenadas[0]
-    distancia_siguiente_parada = calcular_distancia((lat_actual, lon_actual), (siguiente_parada[5], siguiente_parada[6]))
+    distancia, duracion = calcular_distancia((lat_actual, lon_actual), (siguiente_parada['latitud'], siguiente_parada['longitud']))
 
-    # Crear una lista de coordenadas para la ruta (ubicación actual + paradas ordenadas)
-    puntos = [(lat_actual, lon_actual)] + [(parada[5], parada[6]) for parada in paradas_ordenadas]
-
-    # Formatear las coordenadas para OSRM
+    puntos = [(lat_actual, lon_actual)] + [(parada['latitud'], parada['longitud']) for parada in paradas_ordenadas]
     coordenadas = ";".join([f"{punto[1]},{punto[0]}" for punto in puntos])
     url = f"http://router.project-osrm.org/route/v1/driving/{coordenadas}?overview=full&geometries=geojson"
 
     response = requests.get(url)
     if response.status_code == 200:
         data = response.json()
-        ruta = data['routes'][0]['geometry']['coordinates']
-        duracion_total = data['routes'][0]['duration']  # Duración total en segundos
-        distancia_total = data['routes'][0]['distance']  # Distancia total en metros
-
-        # Convertir coordenadas a formato [lat, lon]
-        ruta = [[coord[1], coord[0]] for coord in ruta]
-
+        ruta = [[coord[1], coord[0]] for coord in data['routes'][0]['geometry']['coordinates']]
         return jsonify({
             "status": "success",
             "ruta": ruta,
-            "duracion_total": duracion_total,
-            "distancia_total": distancia_total,
+            "duracion_total": data['routes'][0]['duration'],
+            "distancia_total": data['routes'][0]['distance'],
             "siguiente_parada": {
-                "nombre": siguiente_parada[0],
-                "apellidos": siguiente_parada[1],
-                "correo": siguiente_parada[2],
-                "telefono": siguiente_parada[3],
-                "direccion": siguiente_parada[4],
-                "distancia": distancia_siguiente_parada["distancia"],
-                "duracion": distancia_siguiente_parada["duracion"]
+                "nombre": siguiente_parada['nombre'],
+                "apellidos": siguiente_parada['apellidos'],
+                "correo": siguiente_parada['correo'],
+                "telefono": siguiente_parada['telefono'],
+                "direccion": siguiente_parada['direccion'],
+                "distancia": distancia,
+                "duracion": duracion
             },
-            "orden_paradas": paradas_ordenadas  # Incluir detalles de las paradas
+            "orden_paradas": [dict(parada) for parada in paradas_ordenadas]
         })
-    else:
-        return jsonify({"status": "error", "message": "No se pudo calcular la ruta"})
-
-def calcular_distancia(origen, destino):
-    url = f"http://router.project-osrm.org/route/v1/driving/{origen[1]},{origen[0]};{destino[1]},{destino[0]}?overview=false"
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        return data['routes'][0]['distance']  # Distancia en metros
-    else:
-        return float('inf')  # Si hay un error, devolvemos infinito
+    return jsonify({"status": "error", "message": "No se pudo calcular la ruta"}), 500
 
 @app.route('/eliminar_parada/<int:id>', methods=['DELETE'])
 def eliminar_parada(id):
-    conn = sqlite3.connect('paradas.db')
-    c = conn.cursor()
-    c.execute("DELETE FROM paradas WHERE id = ?", (id,))
+    conn = get_db_connection()
+    conn.execute("DELETE FROM paradas WHERE id = ?", (id,))
     conn.commit()
     conn.close()
-    
     return jsonify({"status": "success"})
 
 if __name__ == '__main__':
