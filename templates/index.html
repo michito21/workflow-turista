@@ -10,7 +10,7 @@
 </head>
 <body>
     <div class="container-fluid mt-3">
-        <h1 class="text-center">Ruta Óptima</h1>
+        <h1 class="text-center">WORKFLOW TURISTAS</h1>
         <div class="row">
             <div class="col-md-4 col-12">
                 <h2>Agregar Parada</h2>
@@ -49,11 +49,16 @@
                 <h2>Mapa de Ruta</h2>
                 <div id="map" style="height: 400px;"></div>
 
-                <h2 class="mt-3">Información de la Ruta</h2>
                 <div id="info-ruta" class="mb-3">
-                    <p><strong>Tiempo total:</strong> <span id="tiempo-total"></span></p>
-                    <p><strong>Distancia total:</strong> <span id="distancia-total"></span></p>
-                    <p><strong>Próxima parada:</strong> <span id="siguiente-parada"></span></p>
+                    <h2>Información de la Ruta</h2>
+                    <div class="info-container">
+                        <p><strong>Tiempo total:</strong> <span id="tiempo-total">-</span></p>
+                        <p><strong>Distancia total:</strong> <span id="distancia-total">-</span></p>
+                        <p><strong>Próxima parada:</strong> <span id="siguiente-parada-nombre">-</span></p>
+                        <p><strong>Distancia:</strong> <span id="siguiente-parada-distancia">-</span></p>
+                        <p><strong>Tiempo estimado:</strong> <span id="siguiente-parada-tiempo">-</span></p>
+                        <p><strong>Estado:</strong> <span id="info-velocidad">Sin movimiento</span></p>
+                    </div>
                 </div>
 
                 <h2>Orden de Paradas</h2>

@@ -41,3 +41,27 @@ body {
 .btn {
     margin-bottom: 10px;
 }
+
+/* Estilos para la información de la ruta */
+#info-ruta {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.info-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.info-container p {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.info-container strong {
+    display: inline-block;
+    width: 120px; /* Ancho fijo para las etiquetas */
+}
