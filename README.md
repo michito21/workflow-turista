@@ -104,8 +104,8 @@ Sigue estos pasos para configurar el proyecto en tu máquina local:
 Este proyecto está bajo la licencia MIT. Consulta el archivo LICENSE para más detalles.
 
 ## Autor
-Michael T. Caceres Paz - [GitHub](https://github.com/michito21)
-Andres T. Pelaez Aquino -[GitHub](https://github.com/terry1365663)
+- Michael T. Caceres Paz - [GitHub](https://github.com/michito21)
+- Andres T. Pelaez Aquino -[GitHub](https://github.com/terry1365663)
 
 ## Agradecimientos
 - A la comunidad de OpenStreetMap por proporcionar datos geográficos gratuitos.
