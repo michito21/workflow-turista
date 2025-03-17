@@ -2,3 +2,4 @@ Flask
 geopy
 requests
 python-dotenv
+gunicorn
