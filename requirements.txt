@@ -1,6 +1,4 @@
 Flask
 geopy
 requests
-sqlite3
-folium
 python-dotenv
