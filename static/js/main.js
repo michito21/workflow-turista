@@ -134,7 +134,7 @@ function calcularRutaOptima() {
                     tiempoSiguienteParada = "N/A"; // Sin movimiento
                 }
 
-                document.getElementById('siguiente-parada-nombre').textContent = `${siguienteParada.nombre} ${siguienteParada.apellidos}`;
+                document.getElementById('siguiente-parada-nombre').textContent = `${siguienteParada.nombre}`;
                 document.getElementById('siguiente-parada-distancia').textContent = `${distanciaSiguienteParada} km`;
                 document.getElementById('siguiente-parada-tiempo').textContent = `${tiempoSiguienteParada} minutos`;
 
@@ -145,8 +145,6 @@ function calcularRutaOptima() {
                     const fila = document.createElement('tr');
                     fila.innerHTML = `
                         <td>${parada.nombre}</td>
-                        <td>${parada.apellidos}</td>
-                        <td>${parada.correo}</td>
                         <td>${parada.telefono}</td>
                         <td>${parada.direccion}</td>
                         <td>
@@ -159,7 +157,7 @@ function calcularRutaOptima() {
                 // Añadir marcadores de las paradas en el mapa
                 data.orden_paradas.forEach((parada, index) => {
                     L.marker([parada.latitud, parada.longitud]).addTo(map)
-                        .bindPopup(`Parada ${index + 1}: ${parada.nombre} ${parada.apellidos}`);
+                        .bindPopup(`Parada ${index + 1}: ${parada.nombre}`);
                 });
             } else {
                 alert("Error al calcular la ruta");
@@ -173,6 +171,7 @@ function calcularRutaOptima() {
             calculandoRuta = false;
         });
 }
+
 // Función para manejar el envío del formulario de agregar parada
 document.getElementById('form-parada').addEventListener('submit', function (e) {
     e.preventDefault();
@@ -211,7 +210,7 @@ function obtenerParadas() {
             data.forEach(parada => {
                 const li = document.createElement('li');
                 li.className = 'list-group-item';
-                li.textContent = `${parada.nombre} ${parada.apellidos} - ${parada.direccion}`;
+                li.textContent = `${parada.nombre} - ${parada.direccion}`;
                 listaParadas.appendChild(li);
             });
         })
