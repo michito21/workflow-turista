@@ -3,13 +3,12 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
 }).addTo(map);
 
-let ubicacionActualMarker = null; // Marcador de la ubicación actual
-let ubicacionActualCoords = null; // Coordenadas de la ubicación actual
+let ubicacionActualMarker = null;
+let ubicacionActualCoords = null;
 let calculandoRuta = false;
-const UMBRAL_DISTANCIA = 0.01; // 10 metros
-let velocidadActual = null; // Velocidad en m/s
+const UMBRAL_DISTANCIA = 0.01;
+let velocidadActual = null;
 
-// Función para obtener la ubicación en tiempo real
 function obtenerUbicacion() {
     if (navigator.geolocation) {
         navigator.geolocation.watchPosition(
@@ -17,43 +16,35 @@ function obtenerUbicacion() {
                 const { latitude, longitude, speed } = position.coords;
                 const nuevaUbicacion = [latitude, longitude];
 
-                // Actualizar la velocidad actual
-                velocidadActual = speed; // Velocidad en m/s (null si no hay movimiento)
+                velocidadActual = speed;
 
-                // Verificar si la ubicación ha cambiado significativamente
                 if (!ubicacionActualCoords || distanciaEntreCoords(ubicacionActualCoords, nuevaUbicacion) > UMBRAL_DISTANCIA) {
                     ubicacionActualCoords = nuevaUbicacion;
-                    console.log("Nueva ubicación:", ubicacionActualCoords); // Log para verificar la ubicación
+                    console.log("Nueva ubicación:", ubicacionActualCoords);
 
-                    // Centrar el mapa en la ubicación actual
                     map.setView(ubicacionActualCoords, 13);
 
-                    // Crear o actualizar el marcador de la ubicación actual
                     if (ubicacionActualMarker) {
                         ubicacionActualMarker.setLatLng(ubicacionActualCoords);
                     } else {
                         ubicacionActualMarker = L.marker(ubicacionActualCoords).addTo(map)
-                            .bindPopup('Tu ubicación actual')
+                            .bindPopup('Ubicación actual')
                             .openPopup();
                     }
 
-                    // Recalcular la ruta si hay paradas y no se está calculando otra ruta
                     if (document.getElementById('lista-paradas').children.length > 0 && !calculandoRuta) {
                         calcularRutaOptima();
                     }
                 }
-
-                // Actualizar la información de velocidad, tiempo estimado y distancia
-                actualizarInformacionVelocidad();
             },
             (error) => {
                 console.error("Error al obtener la ubicación:", error);
                 alert("No se pudo obtener la ubicación. Asegúrate de permitir el acceso a la ubicación.");
             },
             {
-                enableHighAccuracy: true, // Mayor precisión
-                timeout: 5000, // Tiempo máximo de espera
-                maximumAge: 0 // No usar ubicaciones en caché
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0
             }
         );
     } else {
@@ -61,33 +52,6 @@ function obtenerUbicacion() {
     }
 }
 
-// Función para calcular la distancia entre dos coordenadas (en kilómetros)
-function distanciaEntreCoords(coord1, coord2) {
-    const [lat1, lon1] = coord1;
-    const [lat2, lon2] = coord2;
-    const R = 6371; // Radio de la Tierra en km
-    const dLat = (lat2 - lat1) * (Math.PI / 180);
-    const dLon = (lon2 - lon1) * (Math.PI / 180);
-    const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // Distancia en km
-}
-
-// Función para actualizar la información de velocidad, tiempo estimado y distancia
-function actualizarInformacionVelocidad() {
-    const infoVelocidad = document.getElementById('info-velocidad');
-    if (velocidadActual !== null && velocidadActual > 0) {
-        const velocidadKmh = (velocidadActual * 3.6).toFixed(2); // Convertir m/s a km/h
-        infoVelocidad.textContent = `En movimiento (${velocidadKmh} km/h)`;
-    } else {
-        infoVelocidad.textContent = "Sin movimiento";
-    }
-}
-
-// Función para calcular la ruta óptima
 function calcularRutaOptima() {
     if (!ubicacionActualCoords) {
         alert("Esperando la ubicación actual...");
@@ -104,41 +68,19 @@ function calcularRutaOptima() {
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                // Limpiar solo las polilíneas y los marcadores de las paradas (no el marcador de la ubicación actual)
                 map.eachLayer(layer => {
                     if (layer instanceof L.Polyline || (layer instanceof L.Marker && layer !== ubicacionActualMarker)) {
                         map.removeLayer(layer);
                     }
                 });
 
-                // Dibujar la nueva ruta en el mapa
                 const ruta = data.ruta;
                 L.polyline(ruta, { color: 'blue' }).addTo(map);
 
-                // Mostrar el tiempo total y la distancia
-                const tiempoTotal = (data.duracion_total / 60).toFixed(2);
-                const distanciaTotal = (data.distancia_total / 1000).toFixed(2);
-                document.getElementById('tiempo-total').textContent = `${tiempoTotal} minutos`;
-                document.getElementById('distancia-total').textContent = `${distanciaTotal} km`;
-
-                // Mostrar el tiempo y la distancia hasta la siguiente parada
                 const siguienteParada = data.siguiente_parada;
-                const distanciaSiguienteParada = (siguienteParada.distancia / 1000).toFixed(2);
 
-                // Ajustar el tiempo estimado en función de la velocidad actual
-                let tiempoSiguienteParada;
-                if (velocidadActual !== null && velocidadActual > 0) {
-                    const velocidadKmh = velocidadActual * 3.6; // Convertir m/s a km/h
-                    tiempoSiguienteParada = ((siguienteParada.distancia / 1000) / velocidadKmh * 60).toFixed(2); // Tiempo en minutos
-                } else {
-                    tiempoSiguienteParada = "N/A"; // Sin movimiento
-                }
+                document.getElementById('siguiente-parada-nombre').textContent = siguienteParada.nombre;
 
-                document.getElementById('siguiente-parada-nombre').textContent = `${siguienteParada.nombre}`;
-                document.getElementById('siguiente-parada-distancia').textContent = `${distanciaSiguienteParada} km`;
-                document.getElementById('siguiente-parada-tiempo').textContent = `${tiempoSiguienteParada} minutos`;
-
-                // Mostrar el orden de las paradas
                 const ordenParadas = document.getElementById('orden-paradas').getElementsByTagName('tbody')[0];
                 ordenParadas.innerHTML = '';
                 data.orden_paradas.forEach((parada, index) => {
@@ -146,18 +88,15 @@ function calcularRutaOptima() {
                     fila.innerHTML = `
                         <td>${parada.nombre}</td>
                         <td>${parada.telefono}</td>
-                        <td>${parada.direccion}</td>
-                        <td>
-                            <button class="btn btn-danger btn-sm" onclick="eliminarParada(${parada.id})">Eliminar</button>
-                        </td>
+                        <td>${parada.usuario}</td>
+                        <td>${parada.latitud}, ${parada.longitud}</td>
                     `;
                     ordenParadas.appendChild(fila);
                 });
 
-                // Añadir marcadores de las paradas en el mapa
                 data.orden_paradas.forEach((parada, index) => {
                     L.marker([parada.latitud, parada.longitud]).addTo(map)
-                        .bindPopup(`Parada ${index + 1}: ${parada.nombre}`);
+                        .bindPopup(`<b>${parada.nombre}</b><br>${parada.distrito}`);
                 });
             } else {
                 alert("Error al calcular la ruta");
@@ -172,7 +111,6 @@ function calcularRutaOptima() {
         });
 }
 
-// Función para manejar el envío del formulario de agregar parada
 document.getElementById('form-parada').addEventListener('submit', function (e) {
     e.preventDefault();
     const formData = new FormData(this);
@@ -184,11 +122,8 @@ document.getElementById('form-parada').addEventListener('submit', function (e) {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            // Limpiar el formulario
             this.reset();
-            // Actualizar la lista de paradas
             obtenerParadas();
-            // Recalcular la ruta
             calcularRutaOptima();
         } else {
             alert("Error al agregar la parada");
@@ -200,7 +135,6 @@ document.getElementById('form-parada').addEventListener('submit', function (e) {
     });
 });
 
-// Función para obtener y mostrar las paradas actuales
 function obtenerParadas() {
     fetch('/obtener_paradas')
         .then(response => response.json())
@@ -210,7 +144,7 @@ function obtenerParadas() {
             data.forEach(parada => {
                 const li = document.createElement('li');
                 li.className = 'list-group-item';
-                li.textContent = `${parada.nombre} - ${parada.direccion}`;
+                li.textContent = `${parada.nombre} - ${parada.telefono} - ${parada.usuario} - ${parada.latitud}, ${parada.longitud}`;
                 listaParadas.appendChild(li);
             });
         })
@@ -219,7 +153,6 @@ function obtenerParadas() {
         });
 }
 
-// Función para eliminar una parada
 function eliminarParada(id) {
     if (confirm("¿Estás seguro de que deseas eliminar esta parada?")) {
         fetch(`/eliminar_parada/${id}`, {
@@ -228,9 +161,7 @@ function eliminarParada(id) {
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                // Actualizar la lista de paradas
                 obtenerParadas();
-                // Recalcular la ruta
                 calcularRutaOptima();
             } else {
                 alert("Error al eliminar la parada");
@@ -243,18 +174,13 @@ function eliminarParada(id) {
     }
 }
 
-// Recalcular la ruta cada 10 segundos
 setInterval(() => {
     if (ubicacionActualCoords && document.getElementById('lista-paradas').children.length > 0) {
         calcularRutaOptima();
     }
 }, 10000);
 
-// Llamar a obtenerParadas al cargar la página
 document.addEventListener('DOMContentLoaded', obtenerParadas);
-
-// Asignar la función al botón de calcular ruta
 document.getElementById('calcular-ruta').addEventListener('click', calcularRutaOptima);
-
-// Iniciar la obtención de la ubicación
 obtenerUbicacion();
+
