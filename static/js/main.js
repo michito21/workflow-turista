@@ -95,8 +95,12 @@ function calcularRutaOptima() {
                 });
 
                 data.orden_paradas.forEach((parada, index) => {
+                    let popupContent = `<b>${parada.nombre}</b>`;
+                    if (parada.distrito) {
+                        popupContent += `<br>${parada.distrito}`;
+                    }
                     L.marker([parada.latitud, parada.longitud]).addTo(map)
-                        .bindPopup(`<b>${parada.nombre}</b><br>${parada.distrito}`);
+                        .bindPopup(popupContent);
                 });
             } else {
                 alert("Error al calcular la ruta");
