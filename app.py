@@ -28,8 +28,8 @@ def agregar_parada():
         return jsonify({"status": "error", "message": "Dirección no válida"}), 400
 
     conn = get_db_connection()
-    conn.execute("INSERT INTO paradas (nombre, apellidos, correo, telefono, direccion, latitud, longitud) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                 (data['nombre'], data['apellidos'], data['correo'], data['telefono'], data['direccion'], latitud, longitud))
+    conn.execute("INSERT INTO paradas (nombre, telefono, direccion, latitud, longitud) VALUES (?, ?, ?, ?, ?)",
+                 (data['nombre'], data['telefono'], data['direccion'], latitud, longitud))
     conn.commit()
     conn.close()
     return jsonify({"status": "success", "latitud": latitud, "longitud": longitud})
@@ -83,8 +83,6 @@ def calcular_ruta_optima():
             "distancia_total": data['routes'][0]['distance'],
             "siguiente_parada": {
                 "nombre": siguiente_parada['nombre'],
-                "apellidos": siguiente_parada['apellidos'],
-                "correo": siguiente_parada['correo'],
                 "telefono": siguiente_parada['telefono'],
                 "direccion": siguiente_parada['direccion'],
                 "distancia": distancia,
@@ -102,6 +100,6 @@ def eliminar_parada(id):
     conn.close()
     return jsonify({"status": "success"})
 
-
 if __name__ == '__main__':
    app.run(host='0.0.0.0', port=5000, debug=True)
+
