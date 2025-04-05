@@ -8,7 +8,6 @@ def init_db():
                   nombre TEXT,
                   telefono TEXT,
                   direccion TEXT,
-                  distrito TEXT,
                   latitud REAL,
                   longitud REAL)''')
     conn.commit()
